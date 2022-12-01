@@ -35,7 +35,6 @@ __pycache__/
 **/*.xlsx
 **/*.txt
 **/data/*
-**/raw_models/*
 **/lightning_logs/*
 **/MNIST/*
 **/MNIST_data/*
