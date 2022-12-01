@@ -73,12 +73,12 @@ class branch:
                     if exact == True:
                         if model.layers[i].name in identifier:
                             print("add Branch to branch point ",model.layers[i].name)
-                            outputs.append(custom_branch[min(branches, len(custom_branch)-1)](model.layers[i].output,targets = targets))
+                            outputs.append(custom_branch[min(branches, len(custom_branch)-1)](model.layers[i].output,num_outputs, targets = targets))
                             branches=branches+1
                     else:
                         if any(id in model.layers[i].name for id in identifier):
                             print("add Branch to branch point ",model.layers[i].name)
-                            outputs.append(custom_branch[min(branches, len(custom_branch)-1)](model.layers[i].output,targets = targets))
+                            outputs.append(custom_branch[min(branches, len(custom_branch)-1)](model.layers[i].output,num_outputs, targets = targets))
                             branches=branches+1
         else: #if identifier is blank or empty
             for i in range(1-len(model.layers)-1):
@@ -89,6 +89,18 @@ class branch:
         new_model = brevis.BranchModel([new_model.input], [outputs], name = new_model.name, custom_objects=new_model.custom_objects)
         return new_model
     
+    def add_branches(model,branchName, branchPoints=[], exact = True, target_input = False, compact = False, loop=True,num_outputs=10):
+        if len(branchPoints) == 0:
+            return
+        # ["max_pooling2d","max_pooling2d_1","dense"]
+        # branch.newBranch_flatten
+        if loop:
+            newModel = branch.add_loop(model,branchName, branchPoints,exact=exact, target_input = target_input, compact = compact,num_outputs=num_outputs)
+        else:
+            newModel = branch.add(model,branchName,branchPoints, exact=exact, target_input = target_input, compact = compact,num_outputs=num_outputs)
+#         print("branch added", newModel)
+#         self.__dict__.update(newModel.__dict__)
+        return newModel
     
     
     def add_loop(model, custom_branch = [], identifier =[""], exact = True, target_input= True, num_outputs=10):

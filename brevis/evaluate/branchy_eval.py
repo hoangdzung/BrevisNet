@@ -11,7 +11,6 @@ import glob
 import os
 import pandas as pd
 import math
-import pydot
 from matplotlib.ticker import FormatStrFormatter
 import matplotlib.pyplot as plt
 plt.style.use('seaborn-whitegrid')

@@ -12,7 +12,6 @@ import itertools
 import time
 import json
 import math
-import pydot
 import os
 
 from brevis.utils import *

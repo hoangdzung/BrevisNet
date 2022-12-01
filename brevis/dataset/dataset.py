@@ -5,24 +5,38 @@ from tensorflow import keras
 from tensorflow.keras import layers, models
 from tensorflow.keras.models import load_model
 from tensorflow.python.keras.backend import print_tensor
+import tensorflow_datasets as tfds
 
 
 
 class prepare:
     def augment_images(image, label,input_size=None, channel_first = False):
-            # Normalize images to have a mean of 0 and standard deviation of 1
-            # image = tf.image.per_image_standardization(image)
-            # Resize images from 32x32 to 277x277
-            image = tf.image.resize(image,input_size)
-            if channel_first:
-                image = tf.transpose(image, [2, 0, 1])
-            
-            return image, label
+        # Normalize images to have a mean of 0 and standard deviation of 1
+        # image = tf.image.per_image_standardization(image)
+        # Resize images from 32x32 to 277x277
+        image = tf.image.resize(image,input_size)
+        if channel_first:
+            image = tf.transpose(image, [2, 0, 1])
+
+        return image, label
     
+    def augment_images_(image,input_size=None, channel_first = False):
+        # Normalize images to have a mean of 0 and standard deviation of 1
+        # image = tf.image.per_image_standardization(image)
+        # Resize images from 32x32 to 277x277
+        image = tf.image.resize(image,input_size)
+        if channel_first:
+            image = tf.transpose(image, [2, 0, 1])
+
+        return image
     
     #dataset for knowledge distillation, includes a second input of labels to input "targets"
     def dataset_distil(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=None,channel_first= False):
-        (train_images, train_labels), (test_images, test_labels) = dataset
+        if type(dataset) == str:
+            train_images, train_labels = tfds.as_numpy(tfds.load(dataset,split='train',batch_size=-1,as_supervised=True,))
+            test_images, test_labels = tfds.as_numpy(tfds.load(dataset,split='test',batch_size=-1,as_supervised=True,))
+        else:
+            (train_images, train_labels), (test_images, test_labels) = dataset
 
         #hack to get around the limitation of providing additional parameters to the map function for the datasets below 
         def augment_images(image, label,input_size=input_size, channel_first = channel_first):
@@ -76,7 +90,52 @@ class prepare:
         print(test_ds)
         return (train_ds, test_ds, validation_ds)
 
+    def dataset_tfds(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=None, channel_first = False, include_targets=False, categorical = True,num_outputs=10,reshuffle=False):
+        ''' build the dataset
+            Arguments: 
+                dataset: the dataset to be used
+                batch_size: the batch size
+                validation_size: the size of the validation set
+                shuffle_size: the size of the shuffle buffer
+                input_size: the size of the input image
+                channel_first: whether the input image is channel first or not
+                include_targets: whether to include the targets as a second input
+                categorical: whether the targets are categorical or not
+                num_outputs: the number of outputs for the categorical targets                            
+        '''
+        test_ds, validation_ds, train_ds = tfds.load(dataset, 
+                                           split=["test", "train[0%:20%]", "train[20%:]"],
+                                            batch_size = batch_size,
+                                           as_supervised=True, with_info=False)
 
+
+        #hack to get around the limitation of providing additional parameters to the map function for the datasets below 
+        def augment_image_label(image, label,input_size=input_size, channel_first= channel_first,num_outputs=num_outputs):
+            label = tf.one_hot(tf.cast(label, tf.int32), num_outputs)
+            label = tf.cast(label, tf.float32)
+            return prepare.augment_images_(image, input_size, channel_first), label   
+        
+        train_ds_size = len(list(train_ds))
+        test_ds_size = len(list(test_ds))
+        validation_ds_size = len(list(validation_ds))
+
+        print("trainSize {}".format(train_ds_size))
+        print("testSize {}".format(test_ds_size))
+        
+        train_ds = (train_ds
+                        .map(augment_image_label)
+                        .shuffle(buffer_size=shuffle_size,seed=42,reshuffle_each_iteration=reshuffle)
+                   )
+        test_ds = (test_ds
+                        .map(augment_image_label)
+                        #   .shuffle(buffer_size=train_ds_size)
+                  )
+        validation_ds = (validation_ds
+                        .map(augment_image_label)
+                        #   .shuffle(buffer_size=validation_ds_size)
+                        )
+        return (train_ds, test_ds, validation_ds)
+    
     def dataset(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=None, channel_first = False, include_targets=False, categorical = True,num_outputs=10,reshuffle=False):
         ''' build the dataset
             Arguments: 
@@ -90,11 +149,19 @@ class prepare:
                 categorical: whether the targets are categorical or not
                 num_outputs: the number of outputs for the categorical targets                            
         '''
-        (train_images, train_labels), (test_images, test_labels) = dataset
-        
+        if type(dataset) == str:
+            return prepare.dataset_tfds(dataset,batch_size=batch_size, validation_size = validation_size, shuffle_size = shuffle_size, input_size=input_size, channel_first = channel_first, include_targets=include_targets, categorical = categorical,num_outputs=num_outputs,reshuffle=reshuffle)
+        if len(dataset) == 2:
+            (train_images, train_labels), (test_images, test_labels) = dataset
+            validation_images, validation_labels = None, None 
+        else:
+            (train_images, train_labels), (validation_images, validation_labels), (test_images, test_labels) = dataset
+
         if categorical:
             train_labels = tf.keras.utils.to_categorical(train_labels,num_outputs)
             test_labels = tf.keras.utils.to_categorical(test_labels,num_outputs)
+            if validation_labels is not None:
+                validation_labels = tf.keras.utils.to_categorical(validation_labels,num_outputs)
 
 
         #hack to get around the limitation of providing additional parameters to the map function for the datasets below 
@@ -104,9 +171,11 @@ class prepare:
                 # image = tf.transpose(image, [2, 0, 1])
                 # print(image)
             return prepare.augment_images(image, label, input_size, channel_first)
-        
-        validation_images, validation_labels = train_images[:validation_size], train_labels[:validation_size] #get the first 5k training samples as validation set
-        train_images, train_labels = train_images[validation_size:], train_labels[validation_size:] # now remove the validation set from the training set.
+        if validation_labels is None:
+            if validation_size < 1:
+                validation_size = int(validation_size * len(train_images))
+            validation_images, validation_labels = train_images[:validation_size], train_labels[:validation_size] #get the first 5k training samples as validation set
+            train_images, train_labels = train_images[validation_size:], train_labels[validation_size:] # now remove the validation set from the training set.
         train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
         test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
         validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
@@ -158,7 +227,11 @@ class prepare:
 
     def test_set(dataset,batch_size=32, input_size=(), channel_first = False, include_targets=False, categorical = True, num_outputs=10):
         ''' quick function to get a test set for the model.'''
-        (train_images, train_labels), (test_images, test_labels) = dataset
+        if type(dataset) == str:
+            train_images, train_labels = tfds.as_numpy(tfds.load(dataset,split='train',batch_size=-1,as_supervised=True,))
+            test_images, test_labels = tfds.as_numpy(tfds.load(dataset,split='test',batch_size=-1,as_supervised=True,))
+        else:
+            (train_images, train_labels), (test_images, test_labels) = dataset        
         if categorical:
             test_labels = tf.keras.utils.to_categorical(test_labels,num_outputs)
         #hack to get around the limitation of providing additional parameters to the map function for the datasets below 
@@ -178,89 +251,94 @@ class prepare:
         return test_ds
 
     def outlierDataset(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=(), channel_first = False, include_targets=False, categorical = True,num_outputs=10):
-            ''' build the dataset with outliers as well
-                build the dataset provided, but add in outliers from another datatset. 
-                the outliers are not provided labels...
-                Arguments: 
-                    dataset: the dataset to be used
-                    batch_size: the batch size
-                    validation_size: the size of the validation set
-                    shuffle_size: the size of the shuffle buffer
-                    input_size: the size of the input image
-                    channel_first: whether the input image is channel first or not
-                    include_targets: whether to include the targets as a second input
-                    categorical: whether the targets are categorical or not
-                    num_outputs: the number of outputs for the categorical targets                            
-            '''
+        ''' build the dataset with outliers as well
+            build the dataset provided, but add in outliers from another datatset. 
+            the outliers are not provided labels...
+            Arguments: 
+                dataset: the dataset to be used
+                batch_size: the batch size
+                validation_size: the size of the validation set
+                shuffle_size: the size of the shuffle buffer
+                input_size: the size of the input image
+                channel_first: whether the input image is channel first or not
+                include_targets: whether to include the targets as a second input
+                categorical: whether the targets are categorical or not
+                num_outputs: the number of outputs for the categorical targets                            
+        '''
+        if type(dataset) == str:
+            train_images, train_labels = tfds.as_numpy(tfds.load(dataset,split='train',batch_size=-1,as_supervised=True,))
+            test_images, test_labels = tfds.as_numpy(tfds.load(dataset,split='test',batch_size=-1,as_supervised=True,))
+        else:
             (train_images, train_labels), (test_images, test_labels) = dataset
-            
+
             if categorical:
                 train_labels = tf.keras.utils.to_categorical(train_labels,num_outputs)
                 test_labels = tf.keras.utils.to_categorical(test_labels,num_outputs)
 
 
-            #hack to get around the limitation of providing additional parameters to the map function for the datasets below 
-            def augment_images(image, label,input_size=input_size, channel_first= channel_first):
-                # if channel_first:
-                    #swap the channels around.
-                    # image = tf.transpose(image, [2, 0, 1])
-                    # print(image)
-                return prepare.augment_images(image, label, input_size, channel_first)
-            
-            validation_images, validation_labels = train_images[:validation_size], train_labels[:validation_size] #get the first 5k training samples as validation set
-            train_images, train_labels = train_images[validation_size:], train_labels[validation_size:] # now remove the validation set from the training set.
-            train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
-            test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
-            validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
+        #hack to get around the limitation of providing additional parameters to the map function for the datasets below 
+        def augment_images(image, label,input_size=input_size, channel_first= channel_first):
+            # if channel_first:
+                #swap the channels around.
+                # image = tf.transpose(image, [2, 0, 1])
+                # print(image)
+            return prepare.augment_images(image, label, input_size, channel_first)
 
+        validation_images, validation_labels = train_images[:validation_size], train_labels[:validation_size] #get the first 5k training samples as validation set
+        train_images, train_labels = train_images[validation_size:], train_labels[validation_size:] # now remove the validation set from the training set.
+        train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
+        test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+        validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
 
-            
-            
-            train_ds_size = len(list(train_ds))
-            test_ds_size = len(list(test_ds))
-            validation_ds_size = len(list(validation_ds))
+        train_ds_size = len(list(train_ds))
+        test_ds_size = len(list(test_ds))
+        validation_ds_size = len(list(validation_ds))
 
-            print("augment Dataset")
-            train_ds = (train_ds.map(augment_images))
-            validation_ds = (validation_ds.map(augment_images))
-            test_ds = (test_ds.map(augment_images))
+        print("augment Dataset")
+        train_ds = (train_ds.map(augment_images))
+        validation_ds = (validation_ds.map(augment_images))
+        test_ds = (test_ds.map(augment_images))
 
-            print("targetsis :", include_targets)
-            #if include_targets is flagged, add an additional input with the label, this is used by custom loss layers that need a separate label source in the inputs to process.
-            if include_targets == True:
-                print("adding targets to inputs")
-                target = tf.data.Dataset.from_tensor_slices((train_labels))
-                train_ds = tf.data.Dataset.zip((train_ds,target))
+        print("targetsis :", include_targets)
+        #if include_targets is flagged, add an additional input with the label, this is used by custom loss layers that need a separate label source in the inputs to process.
+        if include_targets == True:
+            print("adding targets to inputs")
+            target = tf.data.Dataset.from_tensor_slices((train_labels))
+            train_ds = tf.data.Dataset.zip((train_ds,target))
 
-                v_target = tf.data.Dataset.from_tensor_slices((validation_labels))
-                validation_ds = tf.data.Dataset.zip((validation_ds,v_target))
+            v_target = tf.data.Dataset.from_tensor_slices((validation_labels))
+            validation_ds = tf.data.Dataset.zip((validation_ds,v_target))
 
-                t_target = tf.data.Dataset.from_tensor_slices((test_labels))
-                test_ds = tf.data.Dataset.zip((test_ds,t_target))
+            t_target = tf.data.Dataset.from_tensor_slices((test_labels))
+            test_ds = tf.data.Dataset.zip((test_ds,t_target))
 
-            print("trainSize {}".format(train_ds_size))
-            print("testSize {}".format(test_ds_size))
-            
-            train_ds = (train_ds
-                            # .map(augment_images)
-                            .shuffle(buffer_size=train_ds_size,seed=42,reshuffle_each_iteration=False)
-                            .batch(batch_size=batch_size, drop_remainder=True))
+        print("trainSize {}".format(train_ds_size))
+        print("testSize {}".format(test_ds_size))
 
-            test_ds = (test_ds
-                            # .map(augment_images)
-                            #   .shuffle(buffer_size=train_ds_size)
-                            .batch(batch_size=batch_size, drop_remainder=True))
+        train_ds = (train_ds
+                        # .map(augment_images)
+                        .shuffle(buffer_size=train_ds_size,seed=42,reshuffle_each_iteration=False)
+                        .batch(batch_size=batch_size, drop_remainder=True))
 
-            validation_ds = (validation_ds
-                            # .map(augment_images)
-                            #   .shuffle(buffer_size=validation_ds_size)
-                            .batch(batch_size=batch_size, drop_remainder=True))
+        test_ds = (test_ds
+                        # .map(augment_images)
+                        #   .shuffle(buffer_size=train_ds_size)
+                        .batch(batch_size=batch_size, drop_remainder=True))
 
-            return (train_ds, test_ds, validation_ds)
+        validation_ds = (validation_ds
+                        # .map(augment_images)
+                        #   .shuffle(buffer_size=validation_ds_size)
+                        .batch(batch_size=batch_size, drop_remainder=True))
+
+        return (train_ds, test_ds, validation_ds)
 
 
     def dataset_normalized(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=(), channel_first = False, include_targets=False, categorical = True):
-        (train_images, train_labels), (test_images, test_labels) = dataset
+        if type(dataset) == str:
+            train_images, train_labels = tfds.as_numpy(tfds.load(dataset,split='train',batch_size=-1,as_supervised=True,))
+            test_images, test_labels = tfds.as_numpy(tfds.load(dataset,split='test',batch_size=-1,as_supervised=True,))
+        else:
+            (train_images, train_labels), (test_images, test_labels) = dataset
         train_images = train_images.reshape(50000, 32,32,3).astype("float32") / 255
         test_images = test_images.reshape(10000, 32,32,3).astype("float32") / 255
         print("labels",train_labels[0])
