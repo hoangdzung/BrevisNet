@@ -32,7 +32,10 @@ def load_dataset(dataset_name, input_size, is_mobile_model):
 
         DataClass = getattr(dataset_without_pytorch, info['python_class'])
 
-        train_dataset = DataClass(split='train', download=True)
+        try:
+            train_dataset = DataClass(split='train', download=download)
+        except:
+            train_dataset = DataClass(split='train', download=download)        
         val_dataset = DataClass(split='val', download=True)
         test_dataset = DataClass(split='test', download=True)
         dataset = (train_dataset.imgs, train_dataset.labels), (val_dataset.imgs, val_dataset.labels), (test_dataset.imgs, test_dataset.labels)
