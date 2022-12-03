@@ -50,7 +50,6 @@ def load_dataset(dataset_name, input_size, is_mobile_model):
                 train_dataset.imgs = np.expand_dims(train_dataset.imgs, -1)
                 val_dataset.imgs = np.expand_dims(val_dataset.imgs, -1)
                 test_dataset.imgs = np.expand_dims(test_dataset.imgs, -1)
-                N_CHANNELS = 1
         
         dataset = (train_dataset.imgs, train_dataset.labels), (val_dataset.imgs, val_dataset.labels), (test_dataset.imgs, test_dataset.labels)
         train_ds, test_ds, validation_ds = brevis.dataset.prepare.dataset(dataset,
