@@ -2,9 +2,30 @@
 # coding: utf-8
 
 # In[1]:
+import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument('dataset',
+                    help='datasete name')
+parser.add_argument('model',
+                    help='model name')
+parser.add_argument('input_size',type=int,
+                    help='input size')
+parser.add_argument('--cuda', default='0',
+                    help='cuda')
+parser.add_argument('--model_dir', default='./model',
+                    help='directory to save models')
+parser.add_argument('--seed', type=int, default=42,
+                    help='seed number')
+parser.add_argument('--epochs', type=int, default=50, 
+                    help='number of training epochs')
+parser.add_argument('--batch_size', type=int, default=64, 
+                    help='batch_size')
+
+args = parser.parse_args()
 
 import os, sys
+os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda
 sys.path.append("../..") # Adds higher directory to python modules path.
 
 import tensorflow as tf
@@ -18,25 +39,7 @@ from utils import Brevis_loss_final, growth_update, branch_conv2d, save_outputs
 from utils import getPredictions_Energy, infer_result, infer_result_OOD, get_branched_flops
 # os.environ['TF_DETERMINISTIC_OPS'] = '1'
 from data_utils import load_dataset
-import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument('dataset',
-                    help='datasete name')
-parser.add_argument('model',
-                    help='model name')
-parser.add_argument('input_size',type=int,
-                    help='input size')
-parser.add_argument('--model_dir', default='./model',
-                    help='directory to save models')
-parser.add_argument('--seed', type=int, default=42,
-                    help='seed number')
-parser.add_argument('--epochs', type=int, default=50, 
-                    help='number of training epochs')
-parser.add_argument('--batch_size', type=int, default=64, 
-                    help='batch_size')
-
-args = parser.parse_args()
 
 model_dir = os.path.join(args.model_dir, '{}_{}'.format(args.dataset, args.model))
 if not os.path.isdir(model_dir):
