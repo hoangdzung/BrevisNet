@@ -41,9 +41,9 @@ def load_dataset(dataset_name, input_size, is_mobile_model):
         dataset = (train_dataset.imgs, train_dataset.labels), (val_dataset.imgs, val_dataset.labels), (test_dataset.imgs, test_dataset.labels)
         
         if N_CHANNELS == 1 and is_mobile_model:
-            train_dataset.imgs = np.concatenate([train_dataset.imgs, train_dataset.imgs, train_dataset.imgs], -1)
-            val_dataset.imgs = np.concatenate([val_dataset.imgs, val_dataset.imgs, val_dataset.imgs], -1)
-            test_dataset.imgs = np.concatenate([test_dataset.imgs, test_dataset.imgs, test_dataset.imgs], -1)
+            train_dataset.imgs = np.stack([train_dataset.imgs, train_dataset.imgs, train_dataset.imgs], -1)
+            val_dataset.imgs = np.stack([val_dataset.imgs, val_dataset.imgs, val_dataset.imgs], -1)
+            test_dataset.imgs = np.stack([test_dataset.imgs, test_dataset.imgs, test_dataset.imgs], -1)
             N_CHANNELS = 3
 
         train_ds, test_ds, validation_ds = brevis.dataset.prepare.dataset(dataset,
