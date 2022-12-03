@@ -70,7 +70,7 @@ def reset_seeds(seed = _SEED):
 # Datasets are loaded in batches of 32, input sizes of (32,32) and shuffled between epochs.
 # For Cifar datasets, The standard train and set sizes are used, with a separate 5k training images separated for validation set purposes.
 
-train_ds, test_ds, validation_ds, meta_data = load_dataset(args.dataset, 224 if args.dataset == 'cifar10' else 32)
+train_ds, test_ds, validation_ds, meta_data = load_dataset(args.dataset, 224 if args.dataset == 'cifar10' else 96)
 
 
 # ## From Scratch Model

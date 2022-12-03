@@ -13,7 +13,7 @@ from tensorflow.keras.layers import Dense, Dropout, Activation, Flatten, Input
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D, BatchNormalization
 from tensorflow.keras.optimizers import SGD
 
-def get_model(INPUT_SIZE, N_CLASSES=10, N_CHANNELS=3):
+def get_model(INPUT_SIZE, N_CLASSES=10, N_CHANNELS=3, **kwargs):
     model = keras.models.Sequential([
         keras.layers.Conv2D(filters=96, kernel_size=(11,11), strides=(4,4), activation='relu', input_shape=(INPUT_SIZE,INPUT_SIZE,N_CHANNELS)),
         keras.layers.BatchNormalization(),
