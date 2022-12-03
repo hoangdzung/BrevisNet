@@ -14,9 +14,7 @@ class prepare:
         # Normalize images to have a mean of 0 and standard deviation of 1
         # image = tf.image.per_image_standardization(image)
         # Resize images from 32x32 to 277x277
-        if len(image.shape):
-            image = tf.expand_dims(image, -1)
-            
+
         image = tf.image.resize(image,input_size)
         if channel_first:
             image = tf.transpose(image, [2, 0, 1])
