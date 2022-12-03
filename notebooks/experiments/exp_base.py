@@ -5,7 +5,6 @@
 
 
 import os, sys
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 sys.path.append("../..") # Adds higher directory to python modules path.
 
 import tensorflow as tf
