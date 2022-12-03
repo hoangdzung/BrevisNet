@@ -7,6 +7,7 @@ import brevis
 import medmnist
 from medmnist import INFO, Evaluator
 import dataset_without_pytorch
+import numpy as np 
 
 def load_dataset(dataset_name, input_size, is_mobile_model):
     if dataset_name == 'cifar10':
