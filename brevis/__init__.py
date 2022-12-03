@@ -7,4 +7,4 @@ from .utils import utils
 
 from .models import selfDistilation
 # import raw_models
-from .raw_models import alexnet, inception, resnet, wide_resnet_pretrain
+from .raw_models import alexnet, inception, resnet, wide_resnet_pretrain, nasnet, mobilenetv2
