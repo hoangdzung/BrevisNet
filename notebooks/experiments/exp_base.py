@@ -43,7 +43,7 @@ model_dir = os.path.join(args.model_dir, '{}_{}'.format(args.dataset, args.model
 if not os.path.isdir(model_dir):
     os.makedirs(model_dir)
     
-BASEMODEL_PATH = os.path.join(model_dir, '{}_{}_base_seed{}.hdf5'.format(args.dataset, args.model, args.seed))
+BASEMODEL_PATH = os.path.join(model_dir, '{}_{}_{}_base_seed{}.hdf5'.format(args.dataset, args.model, args.input_size, args.seed))
 
 
 # ## Model Determinism
@@ -89,5 +89,6 @@ base_model.fit(train_ds, epochs=args.epochs, validation_data = validation_ds, ba
 flops = get_branched_flops(base_model)
 print(f"FLOPS: {flops:.03} G")
 loss, accuracy = base_model.evaluate(test_ds, batch_size=args.batch_size)
+print("Test accuray:", accuracy)
 base_model.save(BASEMODEL_PATH)
 print(base_model.summary())
