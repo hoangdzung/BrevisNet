@@ -9,8 +9,6 @@ parser.add_argument('dataset',
                     help='datasete name')
 parser.add_argument('model',
                     help='model name')
-parser.add_argument('input_size',type=int,
-                    help='input size')
 parser.add_argument('--cuda', default='0',
                     help='cuda')
 parser.add_argument('--model_dir', default='./model',
@@ -45,7 +43,7 @@ model_dir = os.path.join(args.model_dir, '{}_{}'.format(args.dataset, args.model
 if not os.path.isdir(model_dir):
     os.makedirs(model_dir)
     
-BASEMODEL_PATH = os.path.join(model_dir, '{}_{}_{}_base_seed{}.hdf5'.format(args.dataset, args.model, args.input_size, args.seed))
+BASEMODEL_PATH = os.path.join(model_dir, '{}_{}_base_seed{}.hdf5'.format(args.dataset, args.model, args.seed))
 
 
 # ## Model Determinism
@@ -72,7 +70,7 @@ def reset_seeds(seed = _SEED):
 # Datasets are loaded in batches of 32, input sizes of (32,32) and shuffled between epochs.
 # For Cifar datasets, The standard train and set sizes are used, with a separate 5k training images separated for validation set purposes.
 
-train_ds, test_ds, validation_ds, meta_data = load_dataset(args.dataset, args.input_size)
+train_ds, test_ds, validation_ds, meta_data = load_dataset(args.dataset, 224 if args.dataset == 'cifar10' else 32)
 
 
 # ## From Scratch Model
