@@ -5,9 +5,9 @@ import sys
 from brevis import dataset
 import tensorflow as tf
 
-def get_model(INPUT_SIZE, N_CLASSES, N_CHANNELS):
+def get_model(INPUT_SIZE, N_CLASSES, N_CHANNELS, weights=None):
     base_model = tf.keras.applications.inception_v3.InceptionV3(input_shape=(INPUT_SIZE, INPUT_SIZE, N_CHANNELS),
-         weights='imagenet',include_top=False)
+         weights=weights,include_top=False)
 
 
     x = base_model.output
