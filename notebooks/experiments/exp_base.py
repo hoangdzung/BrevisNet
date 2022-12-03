@@ -70,14 +70,16 @@ def reset_seeds(seed = _SEED):
 # Datasets are loaded in batches of 32, input sizes of (32,32) and shuffled between epochs.
 # For Cifar datasets, The standard train and set sizes are used, with a separate 5k training images separated for validation set purposes.
 
-train_ds, test_ds, validation_ds, meta_data = load_dataset(args.dataset, args.input_size)
+train_ds, test_ds, validation_ds, meta_data = load_dataset(args.dataset, args.input_size, args.model in ['nasnet, mobilenet'] )
 
 
 # ## From Scratch Model
 model_to_class = {'alexnet': raw_models.alexnet.get_model,
                  'resnet': raw_models.resnet.get_model,
                  'inception': raw_models.inception.get_model,
-                 'wideresnet': raw_models.wide_resnet_pretrain.get_model}
+                 'wideresnet': raw_models.wide_resnet_pretrain.get_model,
+                 'nasnet': raw_models.nasnet.get_model,
+                 'mobilenet': raw_models.mobilenetv2.get_model}
 assert args.model in model_to_class
 base_model = model_to_class[args.model](meta_data['input_size'], meta_data['n_classes'], meta_data['n_channels'])
 base_model.compile(optimizer='adam', 

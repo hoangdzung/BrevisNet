@@ -1,1 +1,1 @@
-from . import alexnet, inception, resnet, wide_resnet_pretrain
+from . import *

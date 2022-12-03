@@ -8,7 +8,7 @@ import medmnist
 from medmnist import INFO, Evaluator
 import dataset_without_pytorch
 
-def load_dataset(dataset_name, input_size):
+def load_dataset(dataset_name, input_size, is_mobile_model):
     if dataset_name == 'cifar10':
         N_CLASSES = 10
         N_CHANNELS = 3
@@ -36,6 +36,13 @@ def load_dataset(dataset_name, input_size):
         val_dataset = DataClass(split='val', download=True)
         test_dataset = DataClass(split='test', download=True)
         dataset = (train_dataset.imgs, train_dataset.labels), (val_dataset.imgs, val_dataset.labels), (test_dataset.imgs, test_dataset.labels)
+        
+        if N_CHANNELS == 1 and is_mobile_model:
+            train_dataset.imgs = np.concatenate([train_dataset.imgs, train_dataset.imgs, train_dataset.imgs], -1)
+            val_dataset.imgs = np.concatenate([val_dataset.imgs, val_dataset.imgs, val_dataset.imgs], -1)
+            test_dataset.imgs = np.concatenate([test_dataset.imgs, test_dataset.imgs, test_dataset.imgs], -1)
+            N_CHANNELS = 3
+
         train_ds, test_ds, validation_ds = brevis.dataset.prepare.dataset(dataset,
                                                                 32,None,shuffle_size=15000,input_size=(input_size,input_size),
                                                                 include_targets=False,num_outputs = N_CLASSES,reshuffle=True)
