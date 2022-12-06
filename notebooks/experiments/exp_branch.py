@@ -9,6 +9,8 @@ parser.add_argument('base_model',
                     help='base_model name')
 parser.add_argument('num_branches', type=int,
                     help='num branches')
+parser.add_argument('--out_dataset',
+                    help='ood dataset name')    
 parser.add_argument('--pretrained',
                     help='pretrained model')                
 parser.add_argument('--cuda', default='0',
@@ -147,6 +149,13 @@ except:
 
 print(f"FLOPS: ", flops)
 output_branchy_ID= getPredictions_Energy(model, test_ds,stopping_point=None)
-for metric in metrics:
-    infer_result(output_branchy_ID, [metric], threshold='gmean', flops=flops)
-    print("="*100)
+if args.out_dataset:
+    _, test_ds_ood, _, _ = load_dataset(args.out_dataset, 224 if args.dataset == 'cifar10' else 96)
+    output_branchy_OOD= getPredictions_Energy(model, test_ds_ood,stopping_point=None)
+    for metric in metrics:
+        infer_result_OOD(output_branchy_ID, output_branchy_OOD, [metric], threshold='gmean', flops=flops)
+        print("="*100)
+else:
+    for metric in metrics:
+        infer_result(output_branchy_ID, [metric], threshold='gmean', flops=flops)
+        print("="*100)

@@ -22,7 +22,7 @@ def load_dataset(dataset_name, input_size):
         N_CLASSES = 100
         N_CHANNELS = 3
         train_ds, test_ds, validation_ds = brevis.dataset.prepare.dataset(tf.keras.datasets.cifar100.load_data(label_mode="fine"),
-                                                                32,5000,shuffle_size=15000,input_size=(INPUT_SIZE,INPUT_SIZE),
+                                                                32,5000,shuffle_size=15000,input_size=(input_size,input_size),
                                                                 include_targets=False,num_outputs = 100,reshuffle=True)
 
     elif dataset_name.endswith('mnist'):
