@@ -121,9 +121,9 @@ else:
 model = brevis.branches.branch.add_branches(model, branch_functs[:args.num_branches],
                                            branchPoints = model_to_attach_pts[args.base_model][:args.num_branches],
                                             target_input=False,loop=False,num_outputs=meta_data['n_classes'])
-if not args.eval:
-    model.setFrozenTraining(args.model == 'brevis')
+model.setFrozenTraining(args.model == 'brevis')
 
+if not args.eval:
     model.compile(loss=[trunk_loss,branch_loss,branch_loss], 
                     optimizer=optimizer,
                     metrics=['accuracy'])
@@ -137,7 +137,8 @@ if not args.eval:
 else:
     model.load_weights(args.pretrained)
 print(model.summary())
-flops = get_branched_flops(model, ["branch_exit"] + ["branch_exit_{}".format(i + 1) for i in range(args.num_branches-2)] + ["classification"])
+import pdb;pdb.set_trace()
+flops = get_branched_flops(model, ["branch_exit"] + ["branch_exit_{}".format(i + 1) for i in range(args.num_branches-1)] + ["classification"])
 print(f"FLOPS: ", flops)
 output_branchy_ID= getPredictions_Energy(model, test_ds,stopping_point=None)
 for metric in metrics:
