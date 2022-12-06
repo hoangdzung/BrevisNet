@@ -25,6 +25,8 @@ parser.add_argument('--gamma', type=float, default=0.0001,
                     help='gamma')
 parser.add_argument('--lambda_t', type=float, default=60,
                     help='initial lambda')
+parser.add_argument('--eval', action='store_true',
+                    help='eval mode')
 args = parser.parse_args()
 
 import os, sys
