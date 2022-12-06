@@ -137,7 +137,7 @@ if not args.eval:
 else:
     model.load_weights(args.pretrained)
 print(model.summary())
-flops = get_branched_flops(model, ["branch_exit", "branch_exit_1", "classification"])
+flops = get_branched_flops(model, ["branch_exit"] + ["branch_exit_{}".format(i + 1) for i in range(args.num_branches-2)] + ["classification"])
 print(f"FLOPS: ", flops)
 output_branchy_ID= getPredictions_Energy(model, test_ds,stopping_point=None)
 for metric in metrics:
