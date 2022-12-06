@@ -29,6 +29,8 @@ parser.add_argument('--lambda_t', type=float, default=60,
                     help='initial lambda')
 parser.add_argument('--eval', action='store_true',
                     help='eval mode')
+parser.add_argument('--first_thresholds',  nargs='+', type=float,
+                    help='manual set the theshold of the first branch')
 args = parser.parse_args()
 
 import os, sys
@@ -151,10 +153,12 @@ print(f"FLOPS: ", flops)
 output_branchy_ID= getPredictions_Energy(model, test_ds,stopping_point=None)
 if args.out_dataset:
     _, test_ds_ood, _, _ = load_dataset(args.out_dataset, 224 if args.dataset == 'cifar10' else 96)
-    output_branchy_OOD= getPredictions_Energy(model, test_ds_ood,stopping_point=None)
-    for metric in metrics:
-        infer_result_OOD(output_branchy_ID, output_branchy_OOD, [metric], threshold='gmean', flops=flops)
-        print("="*100)
+    output_branchy_OOD= getPredictions_Energy(model, test_ds_ood,stopping_point=None)[:len(output_branchy_ID)]
+    for first_thresh in args.first_thresholds:
+        for metric in metrics:
+            infer_result_OOD(output_branchy_ID, output_branchy_OOD, [metric], threshold='gmean', flops=flops, first_thresh=first_thresh)
+            print("="*100)
+    print("=-"*50)
 else:
     for metric in metrics:
         infer_result(output_branchy_ID, [metric], threshold='gmean', flops=flops)

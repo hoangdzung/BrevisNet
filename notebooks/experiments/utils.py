@@ -506,7 +506,7 @@ def infer_result(ID, metrics=["energy"], threshold="gmean", flops=None):
             flop = sum([flop * n_accepted/len(ID[0]) for flop, n_accepted in zip(flops, Accepted_ID_list) ])
             print(flop)
 
-def infer_result_OOD(ID, OOD, metrics=["energy"], threshold="gmean", flops=None):
+def infer_result_OOD(ID, OOD, metrics=["energy"], threshold="gmean", flops=None, first_thresh=None):
     lessThanMetrics = ["energy","uncert","entropy"]
     if type(metrics) is not list:
         metrics = [metrics]
@@ -526,7 +526,10 @@ def infer_result_OOD(ID, OOD, metrics=["energy"], threshold="gmean", flops=None)
             # correct and incorrect on this branch
             Correct = output_ID.loc[(output_ID['correct'] == True)]
             Incorrect = output_ID.loc[(output_ID['correct'] == False)]
-            _threshold = prepare_threshold(threshold, metric, output_ID, Correct)
+            if branch_idx == 0 and first_thresh is not None:
+                _threshold = first_thresh
+            else:
+                _threshold = prepare_threshold(threshold, metric, output_ID, Correct)
             
             if len(rollOver_ID_indices)>0:
                 output_ID = output_ID.iloc[rollOver_ID_indices]
