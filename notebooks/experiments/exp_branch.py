@@ -89,7 +89,7 @@ model_to_class = {'alexnet': raw_models.alexnet.get_model,
                  'wideresnet': raw_models.wide_resnet_pretrain.get_model}
 model_to_attach_pts = {'alexnet': ['max_pooling2d', 'max_pooling2d_1', 'conv2d_3'],
                  'resnet': ["conv2_block1_out","conv2_block3_out", 'conv3_block1_out'],
-                 'inception': ["mixed0","mixed1", 'mixed4'],
+                 'inception': ["mixed0","mixed1", 'mixed2'],
                  'wideresnet': ["conv2_block1_out","conv2_block3_out", 'conv3_block1_out']}
 branch_functs = [lambda *args, **kwargs: branch_conv2d(*args, depths = [64, 256], **kwargs),
                 lambda *args, **kwargs: branch_conv2d(*args, depths = [128, 512], **kwargs),
