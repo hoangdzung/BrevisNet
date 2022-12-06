@@ -231,7 +231,7 @@ def branch_conv2d(prevLayer, n_classes, depths, targets=None, teacher_sm = None,
     # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(output))
     return output
 
-def Brevis_loss_final(lambda_callback: lambda_update):
+def Brevis_loss_final(lambda_callback: lambda_update, gamma=0.0001):
     ''' Loss function of Evidential Dirichlet Networks
         Expected Mean Square Error + KL divergence
     '''
@@ -262,7 +262,7 @@ def Brevis_loss_final(lambda_callback: lambda_update):
         # alp = E*(1-p) + 1 
         # C =   annealing_coef * KL(alp,10)
         # C =   annealing_coef * DirichletKLLoss(p,logits, True)
-        D = 0.0001 * -tf.reduce_mean(tfp.distributions.Dirichlet(alpha).entropy())
+        D = gamma * -tf.reduce_mean(tfp.distributions.Dirichlet(alpha).entropy())
         # tf.print((A + B),summarize=-1)
         # tf.print((info_reg + D),summarize=-1)
         
