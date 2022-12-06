@@ -154,11 +154,16 @@ output_branchy_ID= getPredictions_Energy(model, test_ds,stopping_point=None)
 if args.out_dataset:
     _, test_ds_ood, _, _ = load_dataset(args.out_dataset, 224 if args.dataset == 'cifar10' else 96)
     output_branchy_OOD= getPredictions_Energy(model, test_ds_ood,stopping_point=None)[:len(output_branchy_ID)]
-    for first_thresh in args.first_thresholds:
+    if args.first_thresholds:
+        for first_thresh in args.first_thresholds:
+            for metric in metrics:
+                infer_result_OOD(output_branchy_ID, output_branchy_OOD, [metric], threshold='gmean', flops=flops, first_thresh=first_thresh)
+                print("="*100)
+        print("=-"*50)
+    else:
         for metric in metrics:
-            infer_result_OOD(output_branchy_ID, output_branchy_OOD, [metric], threshold='gmean', flops=flops, first_thresh=first_thresh)
+            infer_result_OOD(output_branchy_ID, output_branchy_OOD, [metric], threshold='gmean', flops=flops)
             print("="*100)
-    print("=-"*50)
 else:
     for metric in metrics:
         infer_result(output_branchy_ID, [metric], threshold='gmean', flops=flops)
