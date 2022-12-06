@@ -14,7 +14,7 @@ from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.regularizers import l2
 from tf2_resnets.models import WideResNet50
 
-def get_model(INPUT_SIZE, N_CLASSES, N_CHANNELS):
+def get_model(INPUT_SIZE, N_CLASSES, N_CHANNELS, weights=None):
     base_model = WideResNet50(input_shape=(INPUT_SIZE, INPUT_SIZE, N_CHANNELS), weights=weights,include_top=False)
 
     x = base_model.output
