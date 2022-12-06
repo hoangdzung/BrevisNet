@@ -102,7 +102,10 @@ if args.model == 'branchy' or args.eval:
 
     branch_loss = keras.losses.CategoricalCrossentropy(from_logits=True)
     trunk_loss = keras.losses.CategoricalCrossentropy(from_logits=False)
-    metrics = ["entropy", "uncert", "calibration"]
+    if args.model == 'brevis':
+        metrics = ["energy"]
+    else:
+        metrics = ["entropy", "uncert", "calibration"]
 
 elif args.model == 'brevis':
     model = model_to_class[args.base_model](meta_data['input_size'], meta_data['n_classes'], meta_data['n_channels'], 'imagenet' if args.dataset == 'cifar10' else None)
@@ -137,7 +140,6 @@ if not args.eval:
 else:
     model.load_weights(args.pretrained)
 print(model.summary())
-import pdb;pdb.set_trace()
 flops = get_branched_flops(model, ["branch_exit"] + ["branch_exit_{}".format(i + 1) for i in range(args.num_branches-1)] + ["classification"])
 print(f"FLOPS: ", flops)
 output_branchy_ID= getPredictions_Energy(model, test_ds,stopping_point=None)
