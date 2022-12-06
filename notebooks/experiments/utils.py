@@ -527,7 +527,7 @@ def infer_result_OOD(ID, OOD, metrics=["energy"], threshold="gmean", flops=None,
             Correct = output_ID.loc[(output_ID['correct'] == True)]
             Incorrect = output_ID.loc[(output_ID['correct'] == False)]
             if branch_idx == 0 and first_thresh is not None:
-                _threshold = first_thresh
+                _threshold = np.float64(first_thresh)
             else:
                 _threshold = prepare_threshold(threshold, metric, output_ID, Correct)
             
@@ -565,8 +565,8 @@ def infer_result_OOD(ID, OOD, metrics=["energy"], threshold="gmean", flops=None,
             accepted_correct = ID_accepted.loc[(ID_accepted["correct"] == True )] #TP
             accepted_incorrect = ID_accepted.loc[(ID_accepted[metric] ==False)] #FP
             
-            accepted_ID_acc = len(accepted_correct) / (len( ID_accepted))
-            overall_accepted_acc = len(accepted_correct) / (len( ID_accepted) + len(OOD_accepted))
+            accepted_ID_acc = len(accepted_correct) / (len( ID_accepted)+1e-10)
+            overall_accepted_acc = len(accepted_correct) / (len( ID_accepted) + len(OOD_accepted)+1e-10)
             n_ID_correct += len(accepted_correct)           
                    
             Thresholds.append(_threshold)
@@ -575,7 +575,7 @@ def infer_result_OOD(ID, OOD, metrics=["energy"], threshold="gmean", flops=None,
             Input_OOD.append(len(output_OOD))
             Accepted_ID_list.append(len(ID_accepted))
             Accepted_OOD_list.append(len(OOD_accepted))
-            Accepted_Ratio_list.append(len(ID_accepted)/(len(ID_accepted) + len(OOD_accepted)))
+            Accepted_Ratio_list.append(len(ID_accepted)/(len(ID_accepted) + len(OOD_accepted)+1e-10))
             Acceptance_correct.append(len(accepted_correct))
             Accepted_Accuracy_list.append(overall_accepted_acc)
             
